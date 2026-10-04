@@ -30,6 +30,7 @@ class BookRadarDesklet extends Desklet.Desklet {
         // Bind impostazioni
         this.settings = new Settings.DeskletSettings(this, this.metadata.uuid, desklet_id);
         this.settings.bindProperty(Settings.BindingDirection.IN, "rotation-interval", "rotationInterval", this._onRotationIntervalChanged.bind(this));
+        this.settings.bindProperty(Settings.BindingDirection.IN, "feed-source", "feedSource", this._onFeedConfigChanged.bind(this));
         this.settings.bindProperty(Settings.BindingDirection.IN, "feed-refresh-hours", "feedRefreshHours", this._onFeedConfigChanged.bind(this));
         this.settings.bindProperty(Settings.BindingDirection.IN, "click-action", "clickAction", () => {});
         this.settings.bindProperty(Settings.BindingDirection.IN, "collection", "collection", this._onFeedConfigChanged.bind(this));
@@ -76,7 +77,7 @@ class BookRadarDesklet extends Desklet.Desklet {
         });
         this.setContent(this.window);
 
-        // Header: badge titolo + contatore
+        // Header: badge dinamico (Bestseller / Novità) + contatore
         this.headerBox = new St.BoxLayout({
             vertical: false,
             style_class: "book-header"
@@ -146,7 +147,7 @@ class BookRadarDesklet extends Desklet.Desklet {
         this.infoBox.add_actor(this.titleButton);
 
         this.titleLabel = new St.Label({
-            text: "Sincronizzazione novità...",
+            text: "Sincronizzazione libri...",
             style_class: "book-title"
         });
         this.titleLabel.clutter_text.set_line_wrap(true);
@@ -154,7 +155,7 @@ class BookRadarDesklet extends Desklet.Desklet {
         this.titleLabel.clutter_text.set_ellipsize(Pango.EllipsizeMode.END);
         this.titleButton.set_child(this.titleLabel);
 
-        // Barra Controlli (Precedente, Pausa, Successivo, Link)
+        // Barra Controlli (Precedente, Pausa, Successivo, Link, Sync)
         this.controlsBox = new St.BoxLayout({
             vertical: false,
             style_class: "book-controls-bar",
@@ -237,7 +238,7 @@ class BookRadarDesklet extends Desklet.Desklet {
         this.pauseMenuItem.connect("activate", () => this._togglePause());
         this._menu.addMenuItem(this.pauseMenuItem);
 
-        let syncItem = new PopupMenu.PopupMenuItem("Aggiorna catalogo novità dal web");
+        let syncItem = new PopupMenu.PopupMenuItem("Aggiorna catalogo dal web");
         syncItem.connect("activate", () => this._triggerSync(true));
         this._menu.addMenuItem(syncItem);
     }
@@ -281,6 +282,7 @@ class BookRadarDesklet extends Desklet.Desklet {
 
     _updateDisplay() {
         if (!this._books || this._books.length === 0) {
+            this.headerTag.set_text("📚 BOOK RADAR");
             this.titleLabel.set_text("Nessun libro disponibile. Aggiornamento in corso...");
             this.authorLabel.set_text("");
             this.counterLabel.set_text("--/--");
@@ -292,6 +294,15 @@ class BookRadarDesklet extends Desklet.Desklet {
         this.titleLabel.set_text(book.title || "Senza Titolo");
         this.authorLabel.set_text(book.author || "");
         this.counterLabel.set_text(`${this._currentIndex + 1} / ${this._books.length}`);
+
+        // Badge della testata dinamico in base alla fonte del libro
+        if (book.badge) {
+            this.headerTag.set_text(book.badge.toUpperCase());
+        } else if (book.source === "amazon") {
+            this.headerTag.set_text("🏆 BESTSELLER AMAZON");
+        } else {
+            this.headerTag.set_text("📖 NOVITÀ IN LIBRERIA");
+        }
 
         // Prezzo
         if (this.showPrice && book.price) {
@@ -400,7 +411,7 @@ class BookRadarDesklet extends Desklet.Desklet {
     }
 
     _checkAndTriggerSync() {
-        // Se il file cache non esiste o è più vecchio di 4 ore, lancia la sync
+        // Se il file cache non esiste o è più vecchio dell'intervallo, lancia la sync
         if (!GLib.file_test(this._feedPath, GLib.FileTest.EXISTS)) {
             this._triggerSync(true);
             return;
@@ -427,10 +438,11 @@ class BookRadarDesklet extends Desklet.Desklet {
             return;
         }
 
+        let source = this.feedSource || "mixed";
         let collection = this.collection || "novita-da-non-perdere";
         let forceFlag = forceCovers ? "--force-covers" : "";
-        let cmd = `python3 "${this._fetcherScript}" --collection "${collection}" ${forceFlag} --quiet`;
-        
+        let cmd = `python3 "${this._fetcherScript}" --source "${source}" --collection "${collection}" ${forceFlag} --quiet`;
+
         try {
             Util.spawnCommandLine(cmd);
         } catch (e) {

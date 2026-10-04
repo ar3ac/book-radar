@@ -33,6 +33,7 @@
       "type": "section",
       "title": "Sorgente Dati",
       "keys": [
+        "feed-source",
         "collection",
         "feed-refresh-hours"
       ]
@@ -72,6 +73,16 @@
     "default": true,
     "description": "Mostra barra comandi (Precedente, Pausa, Successivo, Link)"
   },
+  "feed-source": {
+    "type": "combobox",
+    "default": "mixed",
+    "description": "Sorgente catalogo",
+    "options": {
+      "Misto (Bestseller Amazon + Novità)": "mixed",
+      "Classifica Bestseller Amazon": "amazon",
+      "Novità Libreria (Giunti)": "giunti"
+    }
+  },
   "collection": {
     "type": "entry",
     "default": "novita-da-non-perdere",
@@ -84,7 +95,7 @@
     "max": 24,
     "step": 1,
     "units": "ore",
-    "description": "Aggiornamento catalogo novità dal web"
+    "description": "Aggiornamento catalogo dal web"
   },
   "transparent-background": {
     "type": "switch",
