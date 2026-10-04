@@ -10,6 +10,7 @@
       "title": "Generale",
       "sections": [
         "carousel-section",
+        "integration-section",
         "feed-section"
       ]
     },
@@ -25,8 +26,16 @@
       "title": "Rotazione e Azioni",
       "keys": [
         "rotation-interval",
+        "fade-transitions",
         "click-action",
         "show-controls"
+      ]
+    },
+    "integration-section": {
+      "type": "section",
+      "title": "Integrazione Tasks-TW",
+      "keys": [
+        "tasks-list-name"
       ]
     },
     "feed-section": {
@@ -59,10 +68,15 @@
     "units": "secondi",
     "description": "Intervallo di rotazione automatica copertine"
   },
+  "fade-transitions": {
+    "type": "switch",
+    "default": true,
+    "description": "Transizione con dissolvenza fluida (Fade-In/Out) tra le copertine"
+  },
   "click-action": {
     "type": "combobox",
     "default": "amazon",
-    "description": "Azione al clic sul libro o titolo",
+    "description": "Azione al clic primario sul libro o titolo",
     "options": {
       "Cerca su Amazon": "amazon",
       "Apri scheda su Giunti al Punto": "giunti"
@@ -71,7 +85,12 @@
   "show-controls": {
     "type": "switch",
     "default": true,
-    "description": "Mostra barra comandi (Precedente, Pausa, Successivo, Link)"
+    "description": "Mostra barra comandi (Precedente, Pausa, Successivo, Task, Info, Link)"
+  },
+  "tasks-list-name": {
+    "type": "entry",
+    "default": "To Do",
+    "description": "Lista di tasks-tw in cui aggiungere i libri (default: 'To Do')"
   },
   "feed-source": {
     "type": "combobox",

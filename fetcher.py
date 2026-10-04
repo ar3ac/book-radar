@@ -272,6 +272,7 @@ def fetch_amazon_bestsellers(limit: int = 20, force_covers: bool = False) -> lis
 
         book = {
             "id": f"amazon_{asin}",
+            "asin": asin,
             "title": title,
             "author": author,
             "isbn": asin if len(asin) == 10 and asin.isdigit() else "",
@@ -293,6 +294,29 @@ def fetch_amazon_bestsellers(limit: int = 20, force_covers: bool = False) -> lis
                 download_cover(img_src, cover_path, force=force_covers)
 
         books.append(book)
+
+    # Arricchimento sinossi per i bestseller Amazon (in parallelo)
+    import concurrent.futures
+
+    def fetch_amazon_synopsis(b):
+        asin = b.get("asin")
+        if not asin or asin.startswith("bestseller_"):
+            return
+        p_url = f"https://www.amazon.it/dp/{asin}"
+        try:
+            req_p = urllib.request.Request(p_url, headers=BROWSER_HEADERS)
+            with urllib.request.urlopen(req_p, timeout=7) as resp_p:
+                p_soup = BeautifulSoup(resp_p.read().decode("utf-8", errors="ignore"), "html.parser")
+                desc_elem = p_soup.select_one("#bookDescription_feature_div, #productDescription")
+                if desc_elem:
+                    full_text = desc_elem.get_text(separator=" ", strip=True)
+                    if full_text and len(full_text) > 20:
+                        b["description"] = full_text
+        except Exception:
+            pass
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
+        list(executor.map(fetch_amazon_synopsis, books))
 
     return books
 

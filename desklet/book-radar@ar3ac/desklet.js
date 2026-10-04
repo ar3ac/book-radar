@@ -8,6 +8,9 @@ const PopupMenu = imports.ui.popupMenu;
 const Clutter = imports.gi.Clutter;
 const Util = imports.misc.util;
 const Pango = imports.gi.Pango;
+const Main = imports.ui.main;
+const ModalDialog = imports.ui.modalDialog;
+const Dialog = imports.ui.dialog;
 
 class BookRadarDesklet extends Desklet.Desklet {
     constructor(metadata, desklet_id) {
@@ -22,6 +25,7 @@ class BookRadarDesklet extends Desklet.Desklet {
         this._syncTimerId = 0;
         this._fileMonitor = null;
         this._fileMonitorId = 0;
+        this._isTransitioning = false;
 
         // Disabilita decorazioni opache di default di Cinnamon
         this.metadata["prevent-decorations"] = true;
@@ -30,6 +34,8 @@ class BookRadarDesklet extends Desklet.Desklet {
         // Bind impostazioni
         this.settings = new Settings.DeskletSettings(this, this.metadata.uuid, desklet_id);
         this.settings.bindProperty(Settings.BindingDirection.IN, "rotation-interval", "rotationInterval", this._onRotationIntervalChanged.bind(this));
+        this.settings.bindProperty(Settings.BindingDirection.IN, "fade-transitions", "fadeTransitions", () => {});
+        this.settings.bindProperty(Settings.BindingDirection.IN, "tasks-list-name", "tasksListName", () => {});
         this.settings.bindProperty(Settings.BindingDirection.IN, "feed-source", "feedSource", this._onFeedConfigChanged.bind(this));
         this.settings.bindProperty(Settings.BindingDirection.IN, "feed-refresh-hours", "feedRefreshHours", this._onFeedConfigChanged.bind(this));
         this.settings.bindProperty(Settings.BindingDirection.IN, "click-action", "clickAction", () => {});
@@ -102,7 +108,18 @@ class BookRadarDesklet extends Desklet.Desklet {
             style_class: "book-cover-btn",
             reactive: true
         });
-        this.coverButton.connect("clicked", () => this._onOpenBook());
+        // Clic sinistro: apri libro | Clic centrale: sinossi
+        this.coverButton.connect("button-press-event", (actor, event) => {
+            let btn = event.get_button();
+            if (btn === 1) {
+                this._onOpenBook();
+                return Clutter.EVENT_STOP;
+            } else if (btn === 2) {
+                this._showSynopsisDialog();
+                return Clutter.EVENT_STOP;
+            }
+            return Clutter.EVENT_PROPAGATE;
+        });
         this.window.add_actor(this.coverButton);
 
         this.coverBin = new St.Bin({
@@ -138,12 +155,22 @@ class BookRadarDesklet extends Desklet.Desklet {
         });
         this.metaBox.add_actor(this.priceBadge);
 
-        // Titolo (cliccabile)
+        // Titolo (cliccabile sinistro/centrale)
         this.titleButton = new St.Button({
             reactive: true,
             style: "padding: 0; margin: 0; background-color: transparent; border: none; text-align: left;"
         });
-        this.titleButton.connect("clicked", () => this._onOpenBook());
+        this.titleButton.connect("button-press-event", (actor, event) => {
+            let btn = event.get_button();
+            if (btn === 1) {
+                this._onOpenBook();
+                return Clutter.EVENT_STOP;
+            } else if (btn === 2) {
+                this._showSynopsisDialog();
+                return Clutter.EVENT_STOP;
+            }
+            return Clutter.EVENT_PROPAGATE;
+        });
         this.infoBox.add_actor(this.titleButton);
 
         this.titleLabel = new St.Label({
@@ -155,7 +182,7 @@ class BookRadarDesklet extends Desklet.Desklet {
         this.titleLabel.clutter_text.set_ellipsize(Pango.EllipsizeMode.END);
         this.titleButton.set_child(this.titleLabel);
 
-        // Barra Controlli (Precedente, Pausa, Successivo, Link, Sync)
+        // Barra Controlli (Precedente, Pausa, Successivo, Task, Sinossi, Link, Sync)
         this.controlsBox = new St.BoxLayout({
             vertical: false,
             style_class: "book-controls-bar",
@@ -186,6 +213,24 @@ class BookRadarDesklet extends Desklet.Desklet {
         });
         this.btnNext.connect("clicked", () => this._nextBook());
         this.controlsBox.add_actor(this.btnNext);
+
+        // Tasto Aggiungi a Tasks-TW
+        this.btnTask = new St.Button({
+            label: "📋 Task",
+            style_class: "book-control-btn",
+            reactive: true
+        });
+        this.btnTask.connect("clicked", () => this._addToTasksTw());
+        this.controlsBox.add_actor(this.btnTask);
+
+        // Tasto Sinossi
+        this.btnInfo = new St.Button({
+            label: "ℹ Trama",
+            style_class: "book-control-btn",
+            reactive: true
+        });
+        this.btnInfo.connect("clicked", () => this._showSynopsisDialog());
+        this.controlsBox.add_actor(this.btnInfo);
 
         this.btnLink = new St.Button({
             label: "🔗 Apri",
@@ -218,6 +263,16 @@ class BookRadarDesklet extends Desklet.Desklet {
     }
 
     _setupContextMenu() {
+        let addTaskItem = new PopupMenu.PopupMenuItem("Aggiungi a tasks-tw");
+        addTaskItem.connect("activate", () => this._addToTasksTw());
+        this._menu.addMenuItem(addTaskItem);
+
+        let showSynopsisItem = new PopupMenu.PopupMenuItem("Leggi sinossi / trama");
+        showSynopsisItem.connect("activate", () => this._showSynopsisDialog());
+        this._menu.addMenuItem(showSynopsisItem);
+
+        this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+
         let openAmazonItem = new PopupMenu.PopupMenuItem("Cerca libro su Amazon");
         openAmazonItem.connect("activate", () => this._openCurrentBook("amazon"));
         this._menu.addMenuItem(openAmazonItem);
@@ -225,6 +280,8 @@ class BookRadarDesklet extends Desklet.Desklet {
         let openGiuntiItem = new PopupMenu.PopupMenuItem("Apri scheda su Giunti al Punto");
         openGiuntiItem.connect("activate", () => this._openCurrentBook("giunti"));
         this._menu.addMenuItem(openGiuntiItem);
+
+        this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
         let nextItem = new PopupMenu.PopupMenuItem("Prossimo libro");
         nextItem.connect("activate", () => this._nextBook());
@@ -280,17 +337,7 @@ class BookRadarDesklet extends Desklet.Desklet {
         }
     }
 
-    _updateDisplay() {
-        if (!this._books || this._books.length === 0) {
-            this.headerTag.set_text("📚 BOOK RADAR");
-            this.titleLabel.set_text("Nessun libro disponibile. Aggiornamento in corso...");
-            this.authorLabel.set_text("");
-            this.counterLabel.set_text("--/--");
-            this.priceBadge.hide();
-            return;
-        }
-
-        let book = this._books[this._currentIndex];
+    _renderBookContent(book) {
         this.titleLabel.set_text(book.title || "Senza Titolo");
         this.authorLabel.set_text(book.author || "");
         this.counterLabel.set_text(`${this._currentIndex + 1} / ${this._books.length}`);
@@ -339,16 +386,71 @@ class BookRadarDesklet extends Desklet.Desklet {
         }
     }
 
+    _updateDisplay(animated = false) {
+        if (!this._books || this._books.length === 0) {
+            this.headerTag.set_text("📚 BOOK RADAR");
+            this.titleLabel.set_text("Nessun libro disponibile. Aggiornamento in corso...");
+            this.authorLabel.set_text("");
+            this.counterLabel.set_text("--/--");
+            this.priceBadge.hide();
+            return;
+        }
+
+        let book = this._books[this._currentIndex];
+        let useFade = animated && (this.fadeTransitions !== false);
+
+        if (!useFade) {
+            this.coverBin.opacity = 255;
+            this.infoBox.opacity = 255;
+            this._renderBookContent(book);
+            return;
+        }
+
+        // Transizione con dissolvenza (Fade-out -> render -> Fade-in)
+        if (this._isTransitioning) return;
+        this._isTransitioning = true;
+
+        this.coverBin.ease({
+            opacity: 40,
+            duration: 200,
+            mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+            onComplete: () => {
+                this._renderBookContent(book);
+                this.coverBin.ease({
+                    opacity: 255,
+                    duration: 250,
+                    mode: Clutter.AnimationMode.EASE_IN_QUAD,
+                    onComplete: () => {
+                        this._isTransitioning = false;
+                    }
+                });
+            }
+        });
+
+        this.infoBox.ease({
+            opacity: 40,
+            duration: 200,
+            mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+            onComplete: () => {
+                this.infoBox.ease({
+                    opacity: 255,
+                    duration: 250,
+                    mode: Clutter.AnimationMode.EASE_IN_QUAD
+                });
+            }
+        });
+    }
+
     _nextBook() {
         if (!this._books || this._books.length === 0) return;
         this._currentIndex = (this._currentIndex + 1) % this._books.length;
-        this._updateDisplay();
+        this._updateDisplay(true);
     }
 
     _prevBook() {
         if (!this._books || this._books.length === 0) return;
         this._currentIndex = (this._currentIndex - 1 + this._books.length) % this._books.length;
-        this._updateDisplay();
+        this._updateDisplay(true);
     }
 
     _togglePause() {
@@ -407,11 +509,10 @@ class BookRadarDesklet extends Desklet.Desklet {
     }
 
     _onDisplaySettingChanged() {
-        this._updateDisplay();
+        this._updateDisplay(false);
     }
 
     _checkAndTriggerSync() {
-        // Se il file cache non esiste o è più vecchio dell'intervallo, lancia la sync
         if (!GLib.file_test(this._feedPath, GLib.FileTest.EXISTS)) {
             this._triggerSync(true);
             return;
@@ -463,7 +564,6 @@ class BookRadarDesklet extends Desklet.Desklet {
         if (action === "giunti") {
             url = book.giunti_url;
         } else {
-            // Default amazon
             url = book.amazon_url || book.giunti_url;
         }
 
@@ -474,6 +574,144 @@ class BookRadarDesklet extends Desklet.Desklet {
                 Util.spawn(["xdg-open", url]);
             }
         }
+    }
+
+    // Integrazione Tasks-TW
+    _findTasksCli() {
+        let candidates = [
+            GLib.find_program_in_path("tasks-tw"),
+            GLib.build_filenamev([GLib.get_home_dir(), ".local", "bin", "tasks-tw"]),
+            GLib.build_filenamev([GLib.get_home_dir(), "projects", "tasks-tw", ".venv", "bin", "tasks-tw"])
+        ];
+        for (let cand of candidates) {
+            if (cand && GLib.file_test(cand, GLib.FileTest.IS_EXECUTABLE)) {
+                return cand;
+            }
+        }
+        return null;
+    }
+
+    _addToTasksTw() {
+        if (!this._books || this._books.length === 0) return;
+        let book = this._books[this._currentIndex];
+        let cli = this._findTasksCli();
+
+        if (!cli) {
+            Main.notify("Book Radar", "Comando tasks-tw non trovato in PATH o ~/.local/bin");
+            return;
+        }
+
+        let taskTitle = `Libro: ${book.title}`;
+        let notes = `Autore: ${book.author}\nPrezzo: ${book.price || 'N/D'}\nLink: ${book.amazon_url || book.giunti_url}`;
+        let listName = this.tasksListName || "To Do";
+
+        let argv = [cli, "add", taskTitle, "--notes", notes, "--list", listName, "--json"];
+
+        try {
+            let proc = new Gio.Subprocess({
+                argv: argv,
+                flags: Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE
+            });
+            proc.init(null);
+
+            // Feedback visuale sul pulsante
+            let prevLabel = this.btnTask.get_label();
+            this.btnTask.set_label("⏳ ...");
+
+            proc.communicate_utf8_async(null, null, (p, res) => {
+                try {
+                    let [ok, stdout, stderr] = p.communicate_utf8_finish(res);
+                    if (p.get_successful()) {
+                        this.btnTask.set_label("✓ Fatto!");
+                        this.btnTask.add_style_class_name("book-control-btn-active");
+                        Main.notify("Book Radar", `Aggiunto a tasks-tw: "${book.title}"`);
+                        Mainloop.timeout_add_seconds(2, () => {
+                            this.btnTask.set_label(prevLabel);
+                            this.btnTask.remove_style_class_name("book-control-btn-active");
+                            return false;
+                        });
+                    } else {
+                        this.btnTask.set_label(prevLabel);
+                        Main.notify("Book Radar", `Errore creazione task: ${stderr || p.get_exit_status()}`);
+                    }
+                } catch (err) {
+                    this.btnTask.set_label(prevLabel);
+                    Main.notify("Book Radar", `Errore tasks-tw: ${err.message}`);
+                }
+            });
+        } catch (e) {
+            Main.notify("Book Radar", `Errore avvio tasks-tw: ${e.message}`);
+        }
+    }
+
+    // Modal Sinossi / Trama
+    _showSynopsisDialog() {
+        if (!this._books || this._books.length === 0) return;
+        let book = this._books[this._currentIndex];
+
+        let dlg = new ModalDialog.ModalDialog();
+
+        let headerText = `${book.badge ? book.badge + ' • ' : ''}${book.title}`;
+        let content = new Dialog.MessageDialogContent({
+            title: headerText,
+            description: `Autore: ${book.author} ${book.price ? '  |  ' + book.price : ''}`
+        });
+        dlg.contentLayout.add_child(content);
+
+        let scrollView = new St.ScrollView({
+            style_class: "synopsis-scroll-view",
+            hscrollbar_policy: St.PolicyType.NEVER,
+            vscrollbar_policy: St.PolicyType.AUTOMATIC
+        });
+        scrollView.set_mouse_scrolling(true);
+        scrollView.set_height(250);
+        scrollView.set_width(470);
+
+        let box = new St.BoxLayout({ vertical: true });
+        box.set_width(450);
+
+        let synopsisText = book.description && book.description.trim()
+            ? book.description.trim()
+            : "Nessuna sinossi disponibile per questo libro.";
+
+        let label = new St.Label({
+            text: synopsisText,
+            style: "color: #f1f5f9; font-size: 10pt; line-height: 1.45;"
+        });
+        label.clutter_text.set_line_wrap(true);
+        label.clutter_text.set_line_wrap_mode(Pango.WrapMode.WORD);
+        label.show();
+        box.add_actor(label);
+        box.show();
+
+        scrollView.add_actor(box);
+        scrollView.show();
+
+        content.add_child(scrollView);
+
+        dlg.setButtons([
+            {
+                label: "📋 Aggiungi a tasks-tw",
+                action: () => {
+                    this._addToTasksTw();
+                }
+            },
+            {
+                label: "🔗 Apri Pagina",
+                action: () => {
+                    this._onOpenBook();
+                    dlg.close();
+                }
+            },
+            {
+                label: "Chiudi",
+                action: () => dlg.close(),
+                default: true,
+                key: Clutter.KEY_Escape
+            }
+        ]);
+
+        dlg.open();
     }
 
     on_desklet_removed() {
