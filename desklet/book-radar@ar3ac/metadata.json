@@ -1,0 +1,10 @@
+{
+  "uuid": "book-radar@ar3ac",
+  "name": "Book Radar",
+  "description": "Novità editoriali e copertine dei libri con rotazione dinamica, fondo trasparente e link diretto ad Amazon / Giunti",
+  "version": "1.0.0",
+  "prevent-decorations": true,
+  "author": "ar3ac",
+  "cinnamon-version": ["5.4", "5.6", "5.8", "6.0", "6.2", "6.4"],
+  "max-instances": "3"
+}

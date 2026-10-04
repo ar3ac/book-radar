@@ -1,0 +1,126 @@
+{
+  "layout": {
+    "type": "layout",
+    "pages": [
+      "general-page",
+      "appearance-page"
+    ],
+    "general-page": {
+      "type": "page",
+      "title": "Generale",
+      "sections": [
+        "carousel-section",
+        "feed-section"
+      ]
+    },
+    "appearance-page": {
+      "type": "page",
+      "title": "Aspetto",
+      "sections": [
+        "style-section"
+      ]
+    },
+    "carousel-section": {
+      "type": "section",
+      "title": "Rotazione e Azioni",
+      "keys": [
+        "rotation-interval",
+        "click-action",
+        "show-controls"
+      ]
+    },
+    "feed-section": {
+      "type": "section",
+      "title": "Sorgente Dati",
+      "keys": [
+        "collection",
+        "feed-refresh-hours"
+      ]
+    },
+    "style-section": {
+      "type": "section",
+      "title": "Stile e Dimensioni",
+      "keys": [
+        "transparent-background",
+        "desklet-opacity",
+        "desklet-width",
+        "show-price",
+        "font-size"
+      ]
+    }
+  },
+  "rotation-interval": {
+    "type": "spinbutton",
+    "default": 20,
+    "min": 5,
+    "max": 300,
+    "step": 5,
+    "units": "secondi",
+    "description": "Intervallo di rotazione automatica copertine"
+  },
+  "click-action": {
+    "type": "combobox",
+    "default": "amazon",
+    "description": "Azione al clic sul libro o titolo",
+    "options": {
+      "Cerca su Amazon": "amazon",
+      "Apri scheda su Giunti al Punto": "giunti"
+    }
+  },
+  "show-controls": {
+    "type": "switch",
+    "default": true,
+    "description": "Mostra barra comandi (Precedente, Pausa, Successivo, Link)"
+  },
+  "collection": {
+    "type": "entry",
+    "default": "novita-da-non-perdere",
+    "description": "Collezione Giunti (es. 'novita-da-non-perdere')"
+  },
+  "feed-refresh-hours": {
+    "type": "spinbutton",
+    "default": 4,
+    "min": 1,
+    "max": 24,
+    "step": 1,
+    "units": "ore",
+    "description": "Aggiornamento catalogo novità dal web"
+  },
+  "transparent-background": {
+    "type": "switch",
+    "default": true,
+    "description": "Sfondo completamente trasparente"
+  },
+  "desklet-opacity": {
+    "type": "spinbutton",
+    "default": 20,
+    "min": 0,
+    "max": 100,
+    "step": 5,
+    "units": "%",
+    "description": "Opacità dello sfondo (se lo sfondo trasparente è disattivato)"
+  },
+  "desklet-width": {
+    "type": "spinbutton",
+    "default": 260,
+    "min": 180,
+    "max": 450,
+    "step": 10,
+    "units": "px",
+    "description": "Larghezza del desklet"
+  },
+  "show-price": {
+    "type": "switch",
+    "default": true,
+    "description": "Mostra badge del prezzo"
+  },
+  "font-size": {
+    "type": "spinbutton",
+    "default": 11,
+    "min": 8,
+    "max": 18,
+    "step": 1,
+    "units": "pt",
+    "description": "Dimensione del testo del titolo"
+  }
+}

@@ -1,0 +1,92 @@
+/* Stili per Book Radar Desklet */
+
+.book-radar-container {
+    color: #f8fafc;
+    font-family: Ubuntu, Cantarell, sans-serif;
+    spacing: 8px;
+}
+
+.book-header {
+    spacing: 6px;
+    padding-bottom: 4px;
+}
+
+.book-badge-tag {
+    font-size: 8.5pt;
+    font-weight: bold;
+    color: #38bdf8;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95), 0 0 6px rgba(0, 0, 0, 0.8);
+}
+
+.book-counter {
+    font-size: 8.5pt;
+    font-weight: bold;
+    color: #cbd5e1;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95), 0 0 6px rgba(0, 0, 0, 0.8);
+}
+
+.book-cover-frame {
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+}
+
+.book-cover-btn {
+    border: none;
+    padding: 0;
+    margin: 0;
+    background-color: transparent;
+    cursor: pointer;
+}
+
+.book-cover-btn:hover {
+    border-color: rgba(56, 189, 248, 0.7);
+}
+
+.book-title {
+    font-weight: bold;
+    color: #ffffff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.95), 0 0 8px rgba(0, 0, 0, 0.85);
+    margin-top: 4px;
+}
+
+.book-author {
+    color: #e2e8f0;
+    font-size: 9.5pt;
+    font-weight: 500;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95), 0 0 6px rgba(0, 0, 0, 0.8);
+    margin-bottom: 2px;
+}
+
+.book-price-badge {
+    background-color: rgba(6, 78, 59, 0.70);
+    border: 1px solid rgba(52, 211, 153, 0.70);
+    border-radius: 5px;
+    padding: 2px 7px;
+    font-size: 8.5pt;
+    font-weight: bold;
+    color: #a7f3d0;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95);
+}
+
+.book-controls-bar {
+    spacing: 6px;
+    padding-top: 4px;
+}
+
+.book-control-btn {
+    background-color: rgba(15, 23, 42, 0.60);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 9pt;
+    color: #f1f5f9;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.95);
+    cursor: pointer;
+}
+
+.book-control-btn:hover {
+    background-color: rgba(56, 189, 248, 0.40);
+    border: 1px solid rgba(56, 189, 248, 0.85);
+    color: #ffffff;
+}
