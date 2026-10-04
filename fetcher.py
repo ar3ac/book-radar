@@ -262,10 +262,10 @@ def fetch_amazon_bestsellers(limit: int = 20, force_covers: bool = False) -> lis
         )
         giunti_url = f"https://giuntialpunto.it/search?q={urllib.parse.quote(title)}"
 
-        # Copertina in alta risoluzione
-        high_res_img = img_src
-        if "_AC_UL300_SR300,200_" in img_src:
-            high_res_img = img_src.replace("_AC_UL300_SR300,200_", "_AC_UL600_SR600,400_")
+        # Copertina ad altissima risoluzione senza bande laterali / letterbox
+        # Rimuove il token di ridimensionamento Amazon (es. ._AC_UL300_SR300,200_.jpg)
+        # per ottenere l'immagine sorgente nativa del libro a piena pagina
+        clean_img_url = re.sub(r"\._[^.]+\.jpg$", ".jpg", img_src) if img_src else ""
 
         cover_filename = f"amz_{asin}.jpg"
         cover_path = str(COVERS_DIR / cover_filename)
@@ -277,7 +277,7 @@ def fetch_amazon_bestsellers(limit: int = 20, force_covers: bool = False) -> lis
             "isbn": asin if len(asin) == 10 and asin.isdigit() else "",
             "price": price,
             "description": f"Classifica Bestseller Amazon: posizione {rank}.",
-            "image_url": high_res_img,
+            "image_url": clean_img_url or img_src,
             "cover_path": cover_path,
             "giunti_url": giunti_url,
             "amazon_url": amazon_url,
@@ -285,10 +285,11 @@ def fetch_amazon_bestsellers(limit: int = 20, force_covers: bool = False) -> lis
             "badge": f"🏆 {rank} Amazon",
         }
 
-        # Scarica copertina (prova prima high-res, se fallisce ripiega su img_src)
-        if high_res_img:
-            ok = download_cover(high_res_img, cover_path, force=force_covers)
-            if not ok and img_src != high_res_img:
+        # Scarica copertina pulita senza bande bianche (se fallisce, ripiega sull'originale)
+        target_download_url = clean_img_url or img_src
+        if target_download_url:
+            ok = download_cover(target_download_url, cover_path, force=force_covers)
+            if not ok and img_src != target_download_url:
                 download_cover(img_src, cover_path, force=force_covers)
 
         books.append(book)
