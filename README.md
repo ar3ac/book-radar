@@ -2,6 +2,8 @@
 
 **Desklet nativa per Cinnamon Desktop (Linux Mint)** per scoprire e sfogliare a schermo i libri più interessanti del momento: le **novità appena uscite in libreria** e la **classifica dei Bestseller su Amazon Italia**, con copertine ad alta risoluzione, rotazione dinamica automatica con dissolvenza, integrazione con **tasks-tw** e link diretto con un clic ad **Amazon** e **Giunti al Punto**.
 
+> 📱 **Disponibile anche su Android**: Dai un'occhiata all'app e widget per la schermata home su [book-radar-android](https://github.com/ar3ac/book-radar-android)!
+
 ---
 
 ## 🌟 Caratteristiche Principali
