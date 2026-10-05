@@ -15,8 +15,7 @@
   - Pulsante dedicato **📋** nella barra dei controlli, nel dialog di trama e nel menu contestuale per aggiungere istantaneamente il libro alla tua lista (default: `"To Do"`) con titolo formattato, autore, prezzo e link diretto Amazon/Goodreads nelle note.
 - **Integrazione 1-Clic con Goodreads ("Want to Read")**:
   - Pulsante dedicato **📚** nella barra dei comandi e nel dialog della trama.
-  - **Ricerca diretta per ISBN**: per i libri Giunti (ISBN-13) e Amazon (ISBN-10 / ASIN), apre la ricerca per codice identificativo univoco (`https://www.goodreads.com/search?q={isbn}`), atterrando istantaneamente sulla scheda specifica dell'edizione con il pulsante *"Want to Read"*.
-  - Se il codice ISBN non è disponibile, esegue un fallback trasparente cercando *Titolo + Autore*.
+  - **Ricerca Intelligente su Titolo Pulito + Autore**: rimuove automaticamente note editoriali (es. *"Ediz. italiana"*, *"Ediz. a colori"*), indicazioni di volume, gadget e sottotitoli lunghi, interrogando Goodreads con la formula più efficace (`https://www.goodreads.com/search?q={titolo_pulito}+{autore}`). Questo garantisce di trovare sempre l'opera o le edizioni collegate senza mai incappare in "0 risultati", portandoti direttamente alla scheda con il tasto *"Want to Read"*.
 - **Sinossi e Trama con Clic Centrale (Scrollable Dialog)**:
   - Fai un **clic centrale** (rotellina del mouse) sulla copertina o sul titolo per aprire una finestra modale scrollabile con la **trama completa** del libro, con pulsanti rapidi per aprirlo su **Goodreads**, **Amazon/Giunti** o aggiungerlo a **tasks-tw**.
 - **Sorgenti Feed Selezionabili**:
@@ -25,7 +24,7 @@
   - 📖 **Novità in Libreria (Giunti al Punto)**: le novità della settimana tramite catalogo Giunti al Punto.
 - **Rotazione Dinamica Automatica (Slideshow)**:
   - Cambia automaticamente libro ogni $N$ secondi (configurabile da 5 a 300 secondi, default: 20s).
-  - Barra dei comandi integrata: Precedente (**◀**), Pausa/Riprendi (**⏸**), Successivo (**▶**), Sinossi (**ℹ**), Aggiungi Task (**📋**), Goodreads (**📚**), Apri nello store (**🔗**) e Aggiorna feed (**🔄**).
+  - Barra dei comandi **perfettamente centrata orizzontalmente**: Precedente (**◀**), Pausa/Riprendi (**⏸**), Successivo (**▶**), Sinossi (**ℹ**), Aggiungi Task (**📋**), Goodreads (**📚**), Apri nello store (**🔗**) e Aggiorna feed (**🔄**).
 - **Link Diretto con 1 Clic (Amazon / Goodreads / Giunti)**:
   - Cliccando con il tasto sinistro sulla copertina o sul titolo si apre direttamente il browser (azione configurabile nelle impostazioni).
 - **Cache Locale & Offline-Friendly**:

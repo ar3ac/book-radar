@@ -56,6 +56,46 @@ def normalize_title(title: str) -> str:
     return " ".join(t.split())
 
 
+def clean_goodreads_query(title: str, author: str) -> str:
+    """Pulisce il titolo e l'autore per massimizzare il matching delle opere su Goodreads."""
+    t = title
+    editorial_patterns = [
+        r"\bediz\.?\s+italiana\b",
+        r"\bediz\.?\s+a\s+colori\b",
+        r"\bedizione\s+italiana\b",
+        r"\blimited\s+edition\b",
+        r"\bcon\s+booklet\b.*",
+        r"\bcon\s+illustration\b.*",
+        r"\bcon\s+gadget\b.*",
+        r"\(vol\.?\s*\d+\)",
+        r"\(vol\b.*?\)",
+    ]
+    for pat in editorial_patterns:
+        t = re.sub(pat, "", t, flags=re.IGNORECASE)
+
+    for sep in [":", " - ", " – ", ". "]:
+        if sep in t:
+            parts = t.split(sep)
+            if len(parts[0].strip()) >= 3:
+                t = parts[0]
+                break
+
+    t = re.sub(r"[\.\,;\"\“\”]+", " ", t)
+    t = " ".join(t.split())
+
+    clean_author = author or ""
+    if "," in clean_author:
+        clean_author = clean_author.split(",")[0].strip()
+    clean_author = " ".join(clean_author.split())
+
+    if clean_author and clean_author != "Autore Sconosciuto":
+        query = f"{t} {clean_author}"
+    else:
+        query = t
+
+    return urllib.parse.quote(query.strip())
+
+
 def parse_giunti_authors(tags: list, handle: str) -> str:
     """Estrae l'autore o gli autori formattati correttamente (Nome Cognome) da tag Giunti."""
     authors = []
@@ -120,11 +160,8 @@ def parse_giunti_product(product: dict, base_url: str) -> dict:
         query_safe = urllib.parse.quote(f"{title} {author}")
         amazon_url = f"https://www.amazon.it/s?k={query_safe}"
 
-    # Goodreads URL
-    if isbn and len(isbn) == 13:
-        goodreads_url = f"https://www.goodreads.com/search?q={isbn}"
-    else:
-        goodreads_url = f"https://www.goodreads.com/search?q={urllib.parse.quote(f'{title} {author}')}"
+    # Goodreads URL (ricerca ottimizzata su Titolo Pulito + Autore per trovare sempre l'opera)
+    goodreads_url = f"https://www.goodreads.com/search?q={clean_goodreads_query(title, author)}"
 
     cover_filename = f"giunti_{isbn}.jpg" if isbn else f"giunti_{product.get('id')}.jpg"
     cover_path = str(COVERS_DIR / cover_filename)
@@ -273,11 +310,8 @@ def fetch_amazon_bestsellers(limit: int = 20, force_covers: bool = False) -> lis
         is_isbn10 = bool(re.match(r"^\d{9}[\dXx]$", asin))
         book_isbn = asin.upper() if is_isbn10 else ""
 
-        # Goodreads URL (priorità a ISBN-10 se disponibile, altrimenti titolo e autore)
-        if book_isbn:
-            goodreads_url = f"https://www.goodreads.com/search?q={book_isbn}"
-        else:
-            goodreads_url = f"https://www.goodreads.com/search?q={urllib.parse.quote(f'{title} {author}')}"
+        # Goodreads URL (ricerca ottimizzata su Titolo Pulito + Autore per trovare sempre l'opera)
+        goodreads_url = f"https://www.goodreads.com/search?q={clean_goodreads_query(title, author)}"
 
         # Copertina ad altissima risoluzione senza bande laterali / letterbox
         # Rimuove il token di ridimensionamento Amazon (es. ._AC_UL300_SR300,200_.jpg)

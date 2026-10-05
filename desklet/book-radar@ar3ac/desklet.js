@@ -185,10 +185,16 @@ class BookRadarDesklet extends Desklet.Desklet {
         // Barra Controlli (Precedente, Pausa, Successivo, Task, Sinossi, Goodreads, Link, Sync)
         this.controlsBox = new St.BoxLayout({
             vertical: false,
-            style_class: "book-controls-bar",
-            x_align: St.Align.MIDDLE
+            style_class: "book-controls-bar"
         });
-        this.window.add_actor(this.controlsBox);
+
+        this.controlsBin = new St.Bin({
+            x_align: St.Align.MIDDLE,
+            y_align: St.Align.MIDDLE,
+            x_expand: true
+        });
+        this.controlsBin.set_child(this.controlsBox);
+        this.window.add_actor(this.controlsBin);
 
         this.btnPrev = new St.Button({
             label: "◀",
@@ -373,10 +379,12 @@ class BookRadarDesklet extends Desklet.Desklet {
         }
 
         // Barra controlli
-        if (this.showControls) {
-            this.controlsBox.show();
-        } else {
-            this.controlsBox.hide();
+        if (this.controlsBin) {
+            if (this.showControls) {
+                this.controlsBin.show();
+            } else {
+                this.controlsBin.hide();
+            }
         }
 
         // Caricamento Copertina
@@ -569,20 +577,47 @@ class BookRadarDesklet extends Desklet.Desklet {
         this._openCurrentBook(action);
     }
 
+    _getCleanGoodreadsUrl(book) {
+        if (book.goodreads_url) {
+            return book.goodreads_url;
+        }
+        let title = book.title || "";
+        let author = (book.author && book.author !== "Autore Sconosciuto") ? book.author : "";
+
+        let t = title
+            .replace(/\bediz\.?\s+italiana\b/gi, "")
+            .replace(/\bediz\.?\s+a\s+colori\b/gi, "")
+            .replace(/\bedizione\s+italiana\b/gi, "")
+            .replace(/\blimited\s+edition\b/gi, "")
+            .replace(/\bcon\s+booklet\b.*/gi, "")
+            .replace(/\bcon\s+illustration\b.*/gi, "")
+            .replace(/\bcon\s+gadget\b.*/gi, "")
+            .replace(/\(vol\.?\s*\d+\)/gi, "")
+            .replace(/\(vol\b.*?\)/gi, "");
+
+        for (let sep of [":", " - ", " – ", ". "]) {
+            if (t.includes(sep)) {
+                let parts = t.split(sep);
+                if (parts[0].trim().length >= 3) {
+                    t = parts[0];
+                    break;
+                }
+            }
+        }
+
+        t = t.replace(/[.,;"“”]+/g, " ").replace(/\s+/g, " ").trim();
+        let cleanAuthor = author.includes(",") ? author.split(",")[0].trim() : author.trim();
+        let query = cleanAuthor ? `${t} ${cleanAuthor}` : t;
+        return `https://www.goodreads.com/search?q=${encodeURIComponent(query)}`;
+    }
+
     _openCurrentBook(action) {
         if (!this._books || this._books.length === 0) return;
         let book = this._books[this._currentIndex];
         let url = "";
 
         if (action === "goodreads") {
-            if (book.goodreads_url) {
-                url = book.goodreads_url;
-            } else if (book.isbn) {
-                url = `https://www.goodreads.com/search?q=${book.isbn}`;
-            } else {
-                let q = (book.author ? `${book.title} ${book.author}` : book.title).trim();
-                url = `https://www.goodreads.com/search?q=${encodeURIComponent(q)}`;
-            }
+            url = this._getCleanGoodreadsUrl(book);
         } else if (action === "giunti") {
             url = book.giunti_url;
         } else {
