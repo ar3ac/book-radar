@@ -182,7 +182,7 @@ class BookRadarDesklet extends Desklet.Desklet {
         this.titleLabel.clutter_text.set_ellipsize(Pango.EllipsizeMode.END);
         this.titleButton.set_child(this.titleLabel);
 
-        // Barra Controlli (Precedente, Pausa, Successivo, Task, Sinossi, Link, Sync)
+        // Barra Controlli (Precedente, Pausa, Successivo, Task, Sinossi, Goodreads, Link, Sync)
         this.controlsBox = new St.BoxLayout({
             vertical: false,
             style_class: "book-controls-bar",
@@ -214,26 +214,35 @@ class BookRadarDesklet extends Desklet.Desklet {
         this.btnNext.connect("clicked", () => this._nextBook());
         this.controlsBox.add_actor(this.btnNext);
 
-        // Tasto Aggiungi a Tasks-TW
-        this.btnTask = new St.Button({
-            label: "📋 Task",
-            style_class: "book-control-btn",
-            reactive: true
-        });
-        this.btnTask.connect("clicked", () => this._addToTasksTw());
-        this.controlsBox.add_actor(this.btnTask);
-
-        // Tasto Sinossi
+        // Tasto Sinossi / Trama
         this.btnInfo = new St.Button({
-            label: "ℹ Trama",
+            label: "ℹ",
             style_class: "book-control-btn",
             reactive: true
         });
         this.btnInfo.connect("clicked", () => this._showSynopsisDialog());
         this.controlsBox.add_actor(this.btnInfo);
 
+        // Tasto Aggiungi a Tasks-TW
+        this.btnTask = new St.Button({
+            label: "📋",
+            style_class: "book-control-btn",
+            reactive: true
+        });
+        this.btnTask.connect("clicked", () => this._addToTasksTw());
+        this.controlsBox.add_actor(this.btnTask);
+
+        // Tasto Goodreads (Want to Read)
+        this.btnGoodreads = new St.Button({
+            label: "📚",
+            style_class: "book-control-btn",
+            reactive: true
+        });
+        this.btnGoodreads.connect("clicked", () => this._openCurrentBook("goodreads"));
+        this.controlsBox.add_actor(this.btnGoodreads);
+
         this.btnLink = new St.Button({
-            label: "🔗 Apri",
+            label: "🔗",
             style_class: "book-control-btn",
             reactive: true
         });
@@ -272,6 +281,10 @@ class BookRadarDesklet extends Desklet.Desklet {
         this._menu.addMenuItem(showSynopsisItem);
 
         this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+
+        let openGoodreadsItem = new PopupMenu.PopupMenuItem("Apri su Goodreads (Want to Read)");
+        openGoodreadsItem.connect("activate", () => this._openCurrentBook("goodreads"));
+        this._menu.addMenuItem(openGoodreadsItem);
 
         let openAmazonItem = new PopupMenu.PopupMenuItem("Cerca libro su Amazon");
         openAmazonItem.connect("activate", () => this._openCurrentBook("amazon"));
@@ -561,7 +574,16 @@ class BookRadarDesklet extends Desklet.Desklet {
         let book = this._books[this._currentIndex];
         let url = "";
 
-        if (action === "giunti") {
+        if (action === "goodreads") {
+            if (book.goodreads_url) {
+                url = book.goodreads_url;
+            } else if (book.isbn) {
+                url = `https://www.goodreads.com/search?q=${book.isbn}`;
+            } else {
+                let q = (book.author ? `${book.title} ${book.author}` : book.title).trim();
+                url = `https://www.goodreads.com/search?q=${encodeURIComponent(q)}`;
+            }
+        } else if (action === "giunti") {
             url = book.giunti_url;
         } else {
             url = book.amazon_url || book.giunti_url;
@@ -602,7 +624,8 @@ class BookRadarDesklet extends Desklet.Desklet {
         }
 
         let taskTitle = `Libro: ${book.title}`;
-        let notes = `Autore: ${book.author}\nPrezzo: ${book.price || 'N/D'}\nLink: ${book.amazon_url || book.giunti_url}`;
+        let grLink = book.goodreads_url ? `\nGoodreads: ${book.goodreads_url}` : "";
+        let notes = `Autore: ${book.author}\nPrezzo: ${book.price || 'N/D'}\nLink: ${book.amazon_url || book.giunti_url}${grLink}`;
         let listName = this.tasksListName || "To Do";
 
         let argv = [cli, "add", taskTitle, "--notes", notes, "--list", listName, "--json"];
@@ -622,20 +645,20 @@ class BookRadarDesklet extends Desklet.Desklet {
                 try {
                     let [ok, stdout, stderr] = p.communicate_utf8_finish(res);
                     if (p.get_successful()) {
-                        this.btnTask.set_label("✓ Fatto!");
+                        this.btnTask.set_label("✓");
                         this.btnTask.add_style_class_name("book-control-btn-active");
                         Main.notify("Book Radar", `Aggiunto a tasks-tw: "${book.title}"`);
                         Mainloop.timeout_add_seconds(2, () => {
-                            this.btnTask.set_label(prevLabel);
+                            this.btnTask.set_label("📋");
                             this.btnTask.remove_style_class_name("book-control-btn-active");
                             return false;
                         });
                     } else {
-                        this.btnTask.set_label(prevLabel);
+                        this.btnTask.set_label("📋");
                         Main.notify("Book Radar", `Errore creazione task: ${stderr || p.get_exit_status()}`);
                     }
                 } catch (err) {
-                    this.btnTask.set_label(prevLabel);
+                    this.btnTask.set_label("📋");
                     Main.notify("Book Radar", `Errore tasks-tw: ${err.message}`);
                 }
             });
@@ -691,7 +714,13 @@ class BookRadarDesklet extends Desklet.Desklet {
 
         dlg.setButtons([
             {
-                label: "📋 Aggiungi a tasks-tw",
+                label: "📚 Goodreads",
+                action: () => {
+                    this._openCurrentBook("goodreads");
+                }
+            },
+            {
+                label: "📋 Tasks-TW",
                 action: () => {
                     this._addToTasksTw();
                 }

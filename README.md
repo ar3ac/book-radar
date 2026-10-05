@@ -12,22 +12,26 @@
 - **Transizioni Fluide con Dissolvenza (Fade-In/Out)**:
   - Ad ogni cambio di libro la copertina e i dettagli sfumano morbidamente senza scatti bruschi (configurabile nelle preferenze).
 - **Integrazione con tasks-tw (To Do List)**:
-  - Pulsante dedicato **📋 Task** nella barra dei controlli e nel menu contestuale per aggiungere istantaneamente il libro alla tua lista (default: `"To Do"`) con titolo formattato, autore, prezzo e link diretto nelle note.
+  - Pulsante dedicato **📋** nella barra dei controlli, nel dialog di trama e nel menu contestuale per aggiungere istantaneamente il libro alla tua lista (default: `"To Do"`) con titolo formattato, autore, prezzo e link diretto Amazon/Goodreads nelle note.
+- **Integrazione 1-Clic con Goodreads ("Want to Read")**:
+  - Pulsante dedicato **📚** nella barra dei comandi e nel dialog della trama.
+  - **Ricerca diretta per ISBN**: per i libri Giunti (ISBN-13) e Amazon (ISBN-10 / ASIN), apre la ricerca per codice identificativo univoco (`https://www.goodreads.com/search?q={isbn}`), atterrando istantaneamente sulla scheda specifica dell'edizione con il pulsante *"Want to Read"*.
+  - Se il codice ISBN non è disponibile, esegue un fallback trasparente cercando *Titolo + Autore*.
 - **Sinossi e Trama con Clic Centrale (Scrollable Dialog)**:
-  - Fai un **clic centrale** (rotellina del mouse) sulla copertina o sul titolo per aprire una finestra modale scrollabile con la **trama completa** del libro, pulsante per aprirne la pagina o aggiungerlo al volo a *tasks-tw*.
+  - Fai un **clic centrale** (rotellina del mouse) sulla copertina o sul titolo per aprire una finestra modale scrollabile con la **trama completa** del libro, con pulsanti rapidi per aprirlo su **Goodreads**, **Amazon/Giunti** o aggiungerlo a **tasks-tw**.
 - **Sorgenti Feed Selezionabili**:
   - 🔄 **Misto (Bestseller Amazon + Novità)** *(default)*: alterna in sequenza i libri in cima alle classifiche di vendita e le novità fresche di stampa, con deduplicazione automatica dei titoli.
   - 🏆 **Classifica Bestseller Amazon**: i primi libri più venduti in tempo reale su Amazon.it, con badge indicatore di posizione (es. `🏆 #1 AMAZON`) e sinossi estratte in parallelo.
   - 📖 **Novità in Libreria (Giunti al Punto)**: le novità della settimana tramite catalogo Giunti al Punto.
 - **Rotazione Dinamica Automatica (Slideshow)**:
   - Cambia automaticamente libro ogni $N$ secondi (configurabile da 5 a 300 secondi, default: 20s).
-  - Barra dei comandi integrata: Precedente (**◀**), Pausa/Riprendi (**⏸**), Successivo (**▶**), Aggiungi Task (**📋**), Sinossi (**ℹ**), Apri nel browser (**🔗**) e Aggiorna feed (**🔄**).
-- **Link Diretto con 1 Clic (Amazon / Giunti)**:
-  - Cliccando con il tasto sinistro sulla copertina o sul titolo si apre direttamente il browser con la scheda del libro.
+  - Barra dei comandi integrata: Precedente (**◀**), Pausa/Riprendi (**⏸**), Successivo (**▶**), Sinossi (**ℹ**), Aggiungi Task (**📋**), Goodreads (**📚**), Apri nello store (**🔗**) e Aggiorna feed (**🔄**).
+- **Link Diretto con 1 Clic (Amazon / Goodreads / Giunti)**:
+  - Cliccando con il tasto sinistro sulla copertina o sul titolo si apre direttamente il browser (azione configurabile nelle impostazioni).
 - **Cache Locale & Offline-Friendly**:
   - Il sincronizzatore `fetcher.py` memorizza le copertine in locale (`~/.cache/book-radar/covers/`) a pieno formato per minimizzare il traffico di rete e garantire fluidità istantanea anche offline.
 - **Menu Contestuale Completo**:
-  - Tasto destro sulla desklet per accedere rapidamente a: *Aggiungi a tasks-tw*, *Leggi sinossi / trama*, *Cerca su Amazon*, *Apri su Giunti*, *Prossimo*, *Precedente*, *Pausa* e *Configura*.
+  - Tasto destro sulla desklet per accedere rapidamente a: *Apri su Goodreads (Want to Read)*, *Cerca su Amazon*, *Apri su Giunti*, *Aggiungi a tasks-tw*, *Leggi sinossi / trama*, *Prossimo*, *Precedente*, *Pausa* e *Configura*.
 
 ---
 
@@ -89,8 +93,8 @@ Facendo clic destro sulla desklet $\rightarrow$ **Configura...** puoi personaliz
 | **Intervallo di rotazione** | Secondi di permanenza su ciascun libro | `20 s` |
 | **Dissolvenza fluida** | Transizione fade-in/out tra le copertine | `Attivo` |
 | **Lista tasks-tw** | Nome della lista in cui aggiungere i libri (es. `To Do` o `Libri`) | `To Do` |
-| **Azione al clic** | *Cerca su Amazon* oppure *Apri scheda su Giunti* | `Amazon` |
-| **Mostra controlli** | Barra con pulsanti (◀ ⏸ ▶ 📋 ℹ 🔗 🔄) | `Attivo` |
+| **Azione al clic** | *Cerca su Amazon*, *Cerca su Goodreads (Want to Read)* oppure *Apri scheda su Giunti* | `Amazon` |
+| **Mostra controlli** | Barra con pulsanti (◀ ⏸ ▶ ℹ 📋 📚 🔗 🔄) | `Attivo` |
 | **Mostra prezzo** | Badge con prezzo di copertina (es. 19,95 €) | `Attivo` |
 | **Sfondo trasparente** | Attiva o disattiva la trasparenza totale dello sfondo | `Attivo` |
 | **Opacità sfondo** | Percentuale opacità quando lo sfondo trasparente è disattivato | `20%` |
@@ -102,7 +106,7 @@ Facendo clic destro sulla desklet $\rightarrow$ **Configura...** puoi personaliz
 
 ## 🖱️ Scorciatoie Mouse
 
-- **Clic Sinistro** sulla cover o sul titolo: apre il link al libro (Amazon o Giunti).
+- **Clic Sinistro** sulla cover o sul titolo: apre il link al libro (Amazon, Goodreads o Giunti in base alle preferenze).
 - **Clic Centrale (rotellina)** sulla cover o sul titolo: apre il pannello modale con la **sinossi / trama**.
 - **Clic Destro**: apre il menu contestuale con tutte le azioni rapide.
 

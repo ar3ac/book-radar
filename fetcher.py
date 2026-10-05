@@ -120,6 +120,12 @@ def parse_giunti_product(product: dict, base_url: str) -> dict:
         query_safe = urllib.parse.quote(f"{title} {author}")
         amazon_url = f"https://www.amazon.it/s?k={query_safe}"
 
+    # Goodreads URL
+    if isbn and len(isbn) == 13:
+        goodreads_url = f"https://www.goodreads.com/search?q={isbn}"
+    else:
+        goodreads_url = f"https://www.goodreads.com/search?q={urllib.parse.quote(f'{title} {author}')}"
+
     cover_filename = f"giunti_{isbn}.jpg" if isbn else f"giunti_{product.get('id')}.jpg"
     cover_path = str(COVERS_DIR / cover_filename)
 
@@ -134,6 +140,7 @@ def parse_giunti_product(product: dict, base_url: str) -> dict:
         "cover_path": cover_path,
         "giunti_url": giunti_url,
         "amazon_url": amazon_url,
+        "goodreads_url": goodreads_url,
         "source": "giunti",
         "badge": "✨ Novità",
     }
@@ -262,6 +269,16 @@ def fetch_amazon_bestsellers(limit: int = 20, force_covers: bool = False) -> lis
         )
         giunti_url = f"https://giuntialpunto.it/search?q={urllib.parse.quote(title)}"
 
+        # Identifica se l'ASIN è un valido ISBN-10 (9 cifre + 1 cifra o X)
+        is_isbn10 = bool(re.match(r"^\d{9}[\dXx]$", asin))
+        book_isbn = asin.upper() if is_isbn10 else ""
+
+        # Goodreads URL (priorità a ISBN-10 se disponibile, altrimenti titolo e autore)
+        if book_isbn:
+            goodreads_url = f"https://www.goodreads.com/search?q={book_isbn}"
+        else:
+            goodreads_url = f"https://www.goodreads.com/search?q={urllib.parse.quote(f'{title} {author}')}"
+
         # Copertina ad altissima risoluzione senza bande laterali / letterbox
         # Rimuove il token di ridimensionamento Amazon (es. ._AC_UL300_SR300,200_.jpg)
         # per ottenere l'immagine sorgente nativa del libro a piena pagina
@@ -275,13 +292,14 @@ def fetch_amazon_bestsellers(limit: int = 20, force_covers: bool = False) -> lis
             "asin": asin,
             "title": title,
             "author": author,
-            "isbn": asin if len(asin) == 10 and asin.isdigit() else "",
+            "isbn": book_isbn,
             "price": price,
             "description": f"Classifica Bestseller Amazon: posizione {rank}.",
             "image_url": clean_img_url or img_src,
             "cover_path": cover_path,
             "giunti_url": giunti_url,
             "amazon_url": amazon_url,
+            "goodreads_url": goodreads_url,
             "source": "amazon",
             "badge": f"🏆 {rank} Amazon",
         }

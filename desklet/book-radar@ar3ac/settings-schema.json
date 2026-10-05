@@ -79,6 +79,7 @@
     "description": "Azione al clic primario sul libro o titolo",
     "options": {
       "Cerca su Amazon": "amazon",
+      "Cerca su Goodreads (Want to Read)": "goodreads",
       "Apri scheda su Giunti al Punto": "giunti"
     }
   },
