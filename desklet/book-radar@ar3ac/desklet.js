@@ -310,6 +310,11 @@ class BookRadarDesklet extends Desklet.Desklet {
         new Tooltips.Tooltip(this.btnSync, "Forza aggiornamento catalogo");
         this.btnSync.connect("clicked", () => this._triggerSync(true));
         this.controlsBox.add_actor(this.btnSync);
+
+        // Assicuriamo padding compatto su tutti i pulsanti per evitare allargamenti oltre deskletWidth
+        for (let btn of [this.btnPrev, this.btnPause, this.btnNext, this.btnInfo, this.btnTask, this.btnGoodreads, this.btnLink, this.btnSync]) {
+            btn.set_style("padding: 3px 2px !important; margin: 0;");
+        }
     }
 
     _applyCustomStyle() {
@@ -320,6 +325,7 @@ class BookRadarDesklet extends Desklet.Desklet {
             ? "background-color: transparent; border: none; box-shadow: none;"
             : `background-color: rgba(15, 23, 42, ${opacity}); border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);`;
 
+        this.window.set_width(width);
         this.window.set_style(`${bg} width: ${width}px; border-radius: 12px; padding: 12px;`);
         this.titleLabel.set_style(`font-size: ${fontSize}pt;`);
         this._updateDisplay();
