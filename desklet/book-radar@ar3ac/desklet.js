@@ -11,6 +11,7 @@ const Pango = imports.gi.Pango;
 const Main = imports.ui.main;
 const ModalDialog = imports.ui.modalDialog;
 const Dialog = imports.ui.dialog;
+const Tooltips = imports.ui.tooltips;
 
 class BookRadarDesklet extends Desklet.Desklet {
     constructor(metadata, desklet_id) {
@@ -197,69 +198,109 @@ class BookRadarDesklet extends Desklet.Desklet {
         this.window.add_actor(this.controlsBin);
 
         this.btnPrev = new St.Button({
-            label: "◀",
             style_class: "book-control-btn",
             reactive: true
         });
+        this.iconPrev = new St.Icon({
+            icon_name: "go-previous-symbolic",
+            icon_size: 13
+        });
+        this.btnPrev.set_child(this.iconPrev);
+        new Tooltips.Tooltip(this.btnPrev, "Libro precedente");
         this.btnPrev.connect("clicked", () => this._prevBook());
         this.controlsBox.add_actor(this.btnPrev);
 
         this.btnPause = new St.Button({
-            label: "⏸",
             style_class: "book-control-btn",
             reactive: true
         });
+        this.iconPause = new St.Icon({
+            icon_name: "media-playback-pause-symbolic",
+            icon_size: 13
+        });
+        this.btnPause.set_child(this.iconPause);
+        this.tooltipPause = new Tooltips.Tooltip(this.btnPause, "Metti in pausa rotazione");
         this.btnPause.connect("clicked", () => this._togglePause());
         this.controlsBox.add_actor(this.btnPause);
 
         this.btnNext = new St.Button({
-            label: "▶",
             style_class: "book-control-btn",
             reactive: true
         });
+        this.iconNext = new St.Icon({
+            icon_name: "go-next-symbolic",
+            icon_size: 13
+        });
+        this.btnNext.set_child(this.iconNext);
+        new Tooltips.Tooltip(this.btnNext, "Libro successivo");
         this.btnNext.connect("clicked", () => this._nextBook());
         this.controlsBox.add_actor(this.btnNext);
 
         // Tasto Sinossi / Trama
         this.btnInfo = new St.Button({
-            label: "ℹ",
             style_class: "book-control-btn",
             reactive: true
         });
+        this.iconInfo = new St.Icon({
+            icon_name: "help-about-symbolic",
+            icon_size: 13
+        });
+        this.btnInfo.set_child(this.iconInfo);
+        new Tooltips.Tooltip(this.btnInfo, "Leggi sinossi / trama");
         this.btnInfo.connect("clicked", () => this._showSynopsisDialog());
         this.controlsBox.add_actor(this.btnInfo);
 
         // Tasto Aggiungi a Tasks-TW
         this.btnTask = new St.Button({
-            label: "📋",
             style_class: "book-control-btn",
             reactive: true
         });
+        this.iconTask = new St.Icon({
+            icon_name: "list-add-symbolic",
+            icon_size: 13
+        });
+        this.btnTask.set_child(this.iconTask);
+        new Tooltips.Tooltip(this.btnTask, "Aggiungi a Tasks-TW");
         this.btnTask.connect("clicked", () => this._addToTasksTw());
         this.controlsBox.add_actor(this.btnTask);
 
         // Tasto Goodreads (Want to Read)
         this.btnGoodreads = new St.Button({
-            label: "📚",
             style_class: "book-control-btn",
             reactive: true
         });
+        this.iconGoodreads = new St.Icon({
+            icon_name: "starred-symbolic",
+            icon_size: 13
+        });
+        this.btnGoodreads.set_child(this.iconGoodreads);
+        new Tooltips.Tooltip(this.btnGoodreads, "Apri su Goodreads");
         this.btnGoodreads.connect("clicked", () => this._openCurrentBook("goodreads"));
         this.controlsBox.add_actor(this.btnGoodreads);
 
         this.btnLink = new St.Button({
-            label: "🔗",
             style_class: "book-control-btn",
             reactive: true
         });
+        this.iconLink = new St.Icon({
+            icon_name: "web-browser-symbolic",
+            icon_size: 13
+        });
+        this.btnLink.set_child(this.iconLink);
+        new Tooltips.Tooltip(this.btnLink, "Apri scheda libro nel browser");
         this.btnLink.connect("clicked", () => this._onOpenBook());
         this.controlsBox.add_actor(this.btnLink);
 
         this.btnSync = new St.Button({
-            label: "🔄",
             style_class: "book-control-btn",
             reactive: true
         });
+        this.iconSync = new St.Icon({
+            icon_name: "view-refresh-symbolic",
+            icon_size: 13
+        });
+        this.btnSync.set_child(this.iconSync);
+        new Tooltips.Tooltip(this.btnSync, "Forza aggiornamento catalogo");
         this.btnSync.connect("clicked", () => this._triggerSync(true));
         this.controlsBox.add_actor(this.btnSync);
     }
@@ -477,14 +518,16 @@ class BookRadarDesklet extends Desklet.Desklet {
     _togglePause() {
         this._isPaused = !this._isPaused;
         if (this._isPaused) {
-            this.btnPause.set_label("▶");
+            this.iconPause.set_icon_name("media-playback-start-symbolic");
+            if (this.tooltipPause) this.tooltipPause.set_text("Riprendi rotazione automatica");
             this.pauseMenuItem.label.set_text("Riprendi rotazione automatica");
             if (this._rotationTimerId) {
                 Mainloop.source_remove(this._rotationTimerId);
                 this._rotationTimerId = 0;
             }
         } else {
-            this.btnPause.set_label("⏸");
+            this.iconPause.set_icon_name("media-playback-pause-symbolic");
+            if (this.tooltipPause) this.tooltipPause.set_text("Metti in pausa rotazione");
             this.pauseMenuItem.label.set_text("Metti in pausa rotazione");
             this._startRotationTimer();
         }

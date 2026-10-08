@@ -70,7 +70,7 @@
 }
 
 .book-controls-bar {
-    spacing: 5px;
+    spacing: 3px;
     padding-top: 4px;
 }
 
@@ -78,10 +78,8 @@
     background-color: rgba(15, 23, 42, 0.60);
     border: 1px solid rgba(255, 255, 255, 0.22);
     border-radius: 6px;
-    padding: 3px 6px;
-    font-size: 8.5pt;
+    padding: 3px 4px;
     color: #f1f5f9;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.95);
     cursor: pointer;
 }
 

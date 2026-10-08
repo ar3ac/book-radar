@@ -95,7 +95,7 @@ Facendo clic destro sulla desklet $\rightarrow$ **Configura...** puoi personaliz
 | **Dissolvenza fluida** | Transizione fade-in/out tra le copertine | `Attivo` |
 | **Lista tasks-tw** | Nome della lista in cui aggiungere i libri (es. `To Do` o `Libri`) | `To Do` |
 | **Azione al clic** | *Cerca su Amazon*, *Cerca su Goodreads (Want to Read)* oppure *Apri scheda su Giunti* | `Amazon` |
-| **Mostra controlli** | Barra con pulsanti (◀ ⏸ ▶ ℹ 📋 📚 🔗 🔄) | `Attivo` |
+| **Mostra controlli** | Barra con pulsanti ad icone simboliche compatte (Precedente, Pausa/Play, Successivo, Info/Sinossi, Aggiungi Task, Goodreads, Browser, Sincronizzazione) | `Attivo` |
 | **Mostra prezzo** | Badge con prezzo di copertina (es. 19,95 €) | `Attivo` |
 | **Sfondo trasparente** | Attiva o disattiva la trasparenza totale dello sfondo | `Attivo` |
 | **Opacità sfondo** | Percentuale opacità quando lo sfondo trasparente è disattivato | `20%` |
