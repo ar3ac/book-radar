@@ -104,7 +104,14 @@ class BookRadarDesklet extends Desklet.Desklet {
         });
         this.headerBox.add_actor(this.counterLabel);
 
-        // Area Copertina
+        // Area Copertina (centrata nel contenitore)
+        this.coverContainer = new St.Bin({
+            x_align: St.Align.MIDDLE,
+            y_align: St.Align.MIDDLE,
+            x_expand: true
+        });
+        this.window.add_actor(this.coverContainer);
+
         this.coverButton = new St.Button({
             style_class: "book-cover-btn",
             reactive: true
@@ -121,7 +128,7 @@ class BookRadarDesklet extends Desklet.Desklet {
             }
             return Clutter.EVENT_PROPAGATE;
         });
-        this.window.add_actor(this.coverButton);
+        this.coverContainer.set_child(this.coverButton);
 
         this.coverBin = new St.Bin({
             style_class: "book-cover-frame",
